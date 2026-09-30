@@ -166,7 +166,7 @@ class LLM:
     def _trace(self, story_id, ep, step, payload: dict) -> str:
         d = self.trace_dir / f"story{story_id}"
         d.mkdir(parents=True, exist_ok=True)
-        f = d / f"{time.strftime('%Y%m%d-%H%M%S')}-ep{ep or 0:03d}-{step}-{time.time_ns() % 10**6}.json"
+        f = d / f"{time.strftime('%Y%m%d-%H%M%S')}-ep{ep or 0:03d}-{step.replace(':', '_')}-{time.time_ns() % 10**6}.json"
         f.write_text(json.dumps(payload, ensure_ascii=False, indent=2))
         return str(f)
 

@@ -397,7 +397,28 @@ def export(story: Optional[int] = None, out: Path = typer.Option(Path("demo"), h
         f"- ep {h['number']}: {h['reason']}  \n  _was:_ {json.loads(h['old'])['logline']}  \n  _now:_ {store.plan_episode(sid, h['number'])['logline']}"
         for h in store.q("SELECT * FROM plan_history WHERE story_id=? ORDER BY id", sid)]
     (out / "hitl_log.md").write_text("\n".join(log))
-    con.print(f"Wrote {out}/arc_plan.md, episodes.md, hitl_log.md")
+
+    rows = store.q("""SELECT CASE WHEN step LIKE 'plan:arc%' THEN 'plan:arcs' ELSE step END s, COUNT(*) n,
+                      SUM(input_tokens) i, SUM(cache_read_tokens) cr, SUM(output_tokens) o, SUM(cost_usd) c,
+                      AVG(latency_ms) l, SUM(attempt>1) rt FROM llm_calls WHERE story_id=? GROUP BY s ORDER BY c DESC""", sid)
+    plan_c = sum(r["c"] for r in rows if r["s"].startswith("plan:"))
+    ep_rows = store.q("""SELECT ep, SUM(cost_usd) c, SUM(latency_ms) l FROM llm_calls WHERE story_id=? AND ep IS NOT NULL
+                         AND step NOT LIKE 'plan:%' GROUP BY ep ORDER BY ep""", sid)
+    total = cfg.story["total_episodes"]
+    rep = ["# Cost & latency report", "", "| Step | Calls | Input tok | Cached tok | Output tok | Cost $ | Avg latency s | Retries |",
+           "|---|---|---|---|---|---|---|---|"]
+    rep += [f"| {r['s']} | {r['n']} | {r['i']:,} | {r['cr']:,} | {r['o']:,} | {r['c']:.3f} | {r['l'] / 1000:.1f} | {r['rt']} |" for r in rows]
+    if ep_rows:
+        avg_c = sum(r["c"] for r in ep_rows) / len(ep_rows)
+        avg_l = sum(r["l"] for r in ep_rows) / len(ep_rows) / 1000
+        rep += ["", f"- Planning (one-off): **${plan_c:.2f}**",
+                f"- Per episode (n={len(ep_rows)}): **${avg_c:.3f}** avg (min ${min(r['c'] for r in ep_rows):.3f}, "
+                f"max ${max(r['c'] for r in ep_rows):.3f}), **{avg_l / 60:.1f} min** model time",
+                f"- Projection for {total} episodes: **${plan_c + avg_c * total:.0f}** and **{avg_l * total / 3600:.1f} h** "
+                f"sequential model time (excluding human review)", "", "| Ep | Cost $ | Model time s |", "|---|---|---|"]
+        rep += [f"| {r['ep']} | {r['c']:.3f} | {r['l'] / 1000:.0f} |" for r in ep_rows]
+    (out / "cost_report.md").write_text("\n".join(rep))
+    con.print(f"Wrote {out}/arc_plan.md, episodes.md, hitl_log.md, cost_report.md")
 
 
 if __name__ == "__main__":
