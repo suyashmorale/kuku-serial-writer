@@ -9,7 +9,7 @@ feedback **carries forward** to future episodes as standing rules and plan chang
 [200-episode arc plan](demo/arc_plan.md) · [15 episodes](demo/episodes.md) ·
 [HITL & decision log](demo/hitl_log.md) · [cost & latency report](demo/cost_report.md) ·
 [full story database](demo/story.sqlite) · [all 111 LLM prompt/response traces](demo/traces/) ·
-[DECISIONS.md](DECISIONS.md) · Screen recording: _link in the submission Drive folder_
+[DECISIONS.md](DECISIONS.md) · **[Screen recording (HITL flow)](https://drive.google.com/drive/folders/1kuXX0cvYXJPisadM17PHT5irWfz8uVkj?usp=sharing)**
 
 > Premise: *"In a sleepy hill town, a newlywed who devours cheap crime novels becomes the prime suspect when her
 > husband's charred body is found — but the next morning, her phone rings with his voice."*

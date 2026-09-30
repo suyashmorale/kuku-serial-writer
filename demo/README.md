@@ -3,6 +3,8 @@
 Everything in this folder was produced by the pipeline in one real run with OpenAI `gpt-6-sol` / `gpt-6-luna`
 (story id 3). Nothing was hand-written except the human feedback typed during review.
 
+**Screen recording of the HITL flow:** https://drive.google.com/drive/folders/1kuXX0cvYXJPisadM17PHT5irWfz8uVkj?usp=sharing
+
 **Premise:** *"In a sleepy hill town, a newlywed who devours cheap crime novels becomes the prime suspect when
 her husband's charred body is found — but the next morning, her phone rings with his voice."*
 **Brief:** Bollywood pulp-noir romantic thriller, original story; fictional Himachal hill town, Indian joint
