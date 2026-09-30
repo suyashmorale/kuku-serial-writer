@@ -1,0 +1,62 @@
+# Model routing per role. Swap provider/model per role without touching code.
+# provider: anthropic | openai | fake   (fake = offline, zero-cost, for tests and dry runs)
+# effort:   low | medium | high | xhigh | max  (omit for models that don't support it, e.g. Haiku 4.5)
+roles:
+  # OpenAI GPT-6 family (verified on developers.openai.com, Sep 2026).
+  # Sol = balanced flagship ($2/$10), Luna = cheap high-volume ($0.10/$0.50), Astra = top tier ($10/$50).
+  bible:       {provider: openai, model: gpt-6-sol,  effort: high,   max_tokens: 32000}
+  outline:     {provider: openai, model: gpt-6-sol,  effort: high,   max_tokens: 32000}
+  arc_beats:   {provider: openai, model: gpt-6-sol,  effort: medium, max_tokens: 24000}
+  beats:       {provider: openai, model: gpt-6-sol,  effort: medium, max_tokens: 12000}
+  writer:      {provider: openai, model: gpt-6-sol,  effort: high,   max_tokens: 24000}
+  critic:      {provider: openai, model: gpt-6-sol,  effort: high,   max_tokens: 16000}
+  reviser:     {provider: openai, model: gpt-6-sol,  effort: medium, max_tokens: 24000}
+  extractor:   {provider: openai, model: gpt-6-sol,  effort: low,    max_tokens: 12000}
+  directive:   {provider: openai, model: gpt-6-sol,  effort: medium, max_tokens: 12000}
+  summarizer:  {provider: openai, model: gpt-6-luna, effort: low,    max_tokens: 6000}
+
+# Upgrade options: bible/outline -> gpt-6-astra (one-off, ~+$2 total) for a stronger season structure.
+# Cheaper options: beats/extractor -> gpt-6-luna (~20x cheaper; watch extraction accuracy on deaths/relationships).
+# Anthropic alternative (set ANTHROPIC_API_KEY):
+#   writer: {provider: anthropic, model: claude-opus-5-5,   effort: high,   max_tokens: 16000}
+#   critic: {provider: anthropic, model: claude-sonnet-5-5, effort: high,   max_tokens: 8000}
+
+# USD per 1M tokens (Standard tier). OpenAI caching is automatic with no write surcharge;
+# Anthropic cache_write assumes the 5-minute TTL (1.25x input).
+pricing:
+  claude-opus-5-5:   {input: 4.00, output: 20.00, cache_read: 0.40, cache_write: 5.00}
+  claude-sonnet-5-5: {input: 2.00, output: 10.00, cache_read: 0.20, cache_write: 2.50}
+  claude-haiku-4-5:  {input: 1.00, output: 5.00,  cache_read: 0.10, cache_write: 1.25}
+  gpt-6-astra:       {input: 10.00, output: 50.00, cache_read: 1.00, cache_write: 0.00}
+  gpt-6-sol:         {input: 2.00,  output: 10.00, cache_read: 0.20, cache_write: 0.00}
+  gpt-6-luna:        {input: 0.10,  output: 0.50,  cache_read: 0.01, cache_write: 0.00}
+  gpt-5.6-sol:       {input: 4.00,  output: 20.00, cache_read: 0.40, cache_write: 0.00}
+  fake:              {input: 0.00, output: 0.00,  cache_read: 0.00, cache_write: 0.00}
+
+anthropic:
+  refusal_fallbacks: true   # server-side fallbacks: "default" (Claude API only; set false behind proxies/Bedrock/Vertex)
+
+limits:
+  episode_cost_cap_usd: 0.60   # hard stop for all calls attributed to one episode
+  story_cost_cap_usd: 40.00    # hard stop for the whole run
+  max_revisions: 2             # critic->revise rounds before handing to a human
+  max_regenerations: 3         # human rejects per episode before we stop and ask for a plan change
+  words_min: 400
+  words_max: 700
+
+story:
+  total_episodes: 200
+  episodes_per_arc: 10
+  acts: 5
+  recent_full_text_episodes: 1   # verbatim previous episode(s) in context for voice continuity
+  recent_summaries: 6            # episode summaries in context beyond the arc summary
+  thread_overdue_after: 12       # flag open threads untouched for this many episodes
+
+hitl:
+  autopilot: false             # true = auto-approve episodes the critic passes with no flags
+  pause_at_arc_boundary: true  # always stop for a human at the end of each 10-episode arc
+
+paths:
+  db: data/story.sqlite
+  checkpoints: data/checkpoints.sqlite
+  traces: data/traces
